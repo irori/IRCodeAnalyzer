@@ -239,8 +239,12 @@ class App {
         this.node = this.audioContext.createScriptProcessor(16384, 2, 1);
         this.node.onaudioprocess = this.onaudioprocess.bind(this);
 
-        // https://bugs.chromium.org/p/chromium/issues/detail?id=453876
+        // Turn of audio processing and enable stereo input in Chrome
+        // (https://crbug.com/453876#c11).
+        // Unfortunately Firefox does not support stereo input
+        // (https://bugzilla.mozilla.org/show_bug.cgi?id=971528).
         var audioConstraint = {optional: [{ echoCancellation: false }]};
+
         navigator.mediaDevices.getUserMedia({video:false, audio:<any>audioConstraint}).then((stream) => {
             var input = this.audioContext.createMediaStreamSource(stream);
             input.connect(this.node);
