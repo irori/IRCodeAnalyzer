@@ -10,8 +10,14 @@ class IRAnalyzer {
         this.buflen = 0;
     }
 
-    addSamples(inputs: Float32Array) {
-        if (this.hasSignal(inputs)) {
+    addSamples(channel1: Float32Array, channel2: Float32Array) {
+        var inputs: Float32Array;
+        if (this.hasSignal(channel1))
+            inputs = channel1;
+        else if (this.hasSignal(channel2))
+            inputs = channel2;
+
+        if (inputs) {
             for (var i = 0; i < inputs.length; i++)
                 this.buffer[this.buflen + i] = inputs[i];
             this.buflen += inputs.length;
@@ -255,15 +261,8 @@ class App {
     }
 
     private onaudioprocess(event: AudioProcessingEvent) {
-        this.copyInputToOutput(event);
-        this.analyzer.addSamples(event.inputBuffer.getChannelData(0));
-    }
-
-    private copyInputToOutput(event: AudioProcessingEvent) {
-        var inputs = event.inputBuffer.getChannelData(0);
-        var outputs = event.outputBuffer.getChannelData(0);
-        for (var i = 0; i < this.node.bufferSize; i++)
-            outputs[i] = inputs[i] * 10;
+        this.analyzer.addSamples(event.inputBuffer.getChannelData(0),
+                                 event.inputBuffer.getChannelData(1));
     }
 }
 

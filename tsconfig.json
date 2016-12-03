@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "es5",
-        "outDir": "doc",
+        "outDir": "docs",
         "module": "commonjs",
         "moduleResolution": "node",
         "isolatedModules": false,
