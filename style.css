@@ -1,0 +1,22 @@
+body {
+    margin: 0 auto;
+    max-width: 1024px;
+}
+
+#visualizer {
+    border: solid 1px;
+    background-color: #000;
+}
+
+#irkit-json {
+    background-color: #eee;
+    padding: 12px 16px;
+    font-family: 'Inconsolata', monospace;
+    word-break: break-all;
+}
+
+#parsed {
+    background-color: #eee;
+    padding: 12px 16px;
+    font-family: 'Inconsolata', monospace;
+}
