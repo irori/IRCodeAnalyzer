@@ -1,6 +1,5 @@
-const sensitivity = 0.005;
-
 class IRAnalyzer {
+    private sensitivity = 0;
     private buffer: Float32Array;
     private buflen: number;
     private zeroValue: number;
@@ -11,6 +10,12 @@ class IRAnalyzer {
     }
 
     addSamples(channel1: Float32Array, channel2: Float32Array) {
+        if (!this.sensitivity) {
+            this.adjustSensitivity(channel1);
+            this.adjustSensitivity(channel2);
+            return;
+        }
+
         var inputs: Float32Array;
         if (this.hasSignal(channel1))
             inputs = channel1;
@@ -21,7 +26,8 @@ class IRAnalyzer {
             for (var i = 0; i < inputs.length; i++)
                 this.buffer[this.buflen + i] = inputs[i];
             this.buflen += inputs.length;
-            return;
+            if (this.buflen + inputs.length <= this.buffer.length)
+                return;
         }
         if (this.buflen == 0)
             return;
@@ -47,10 +53,20 @@ class IRAnalyzer {
 
     private hasSignal(samples: Float32Array): boolean {
         for (var i = 1; i < samples.length; i++) {
-            if (Math.abs(samples[i-1] - samples[i]) >= sensitivity)
+            if (Math.abs(samples[i-1] - samples[i]) >= this.sensitivity)
                 return true;
         }
         return false;
+    }
+
+    private adjustSensitivity(samples: Float32Array) {
+        var max = 0;
+        for (var i = 1; i < samples.length; i++)
+            max = Math.max(max, Math.abs(samples[i-1] - samples[i]));
+        if (this.sensitivity < max * 10) {
+            this.sensitivity = max * 10;
+            console.log('sensitivity: ' + this.sensitivity);
+        }
     }
 
     private normalizeBuffer(): Float32Array {

@@ -1,11 +1,16 @@
-var sensitivity = 0.005;
 var IRAnalyzer = (function () {
     function IRAnalyzer(app) {
         this.app = app;
+        this.sensitivity = 0;
         this.buffer = new Float32Array(32768);
         this.buflen = 0;
     }
     IRAnalyzer.prototype.addSamples = function (channel1, channel2) {
+        if (!this.sensitivity) {
+            this.adjustSensitivity(channel1);
+            this.adjustSensitivity(channel2);
+            return;
+        }
         var inputs;
         if (this.hasSignal(channel1))
             inputs = channel1;
@@ -15,7 +20,8 @@ var IRAnalyzer = (function () {
             for (var i = 0; i < inputs.length; i++)
                 this.buffer[this.buflen + i] = inputs[i];
             this.buflen += inputs.length;
-            return;
+            if (this.buflen + inputs.length <= this.buffer.length)
+                return;
         }
         if (this.buflen == 0)
             return;
@@ -38,10 +44,19 @@ var IRAnalyzer = (function () {
     };
     IRAnalyzer.prototype.hasSignal = function (samples) {
         for (var i = 1; i < samples.length; i++) {
-            if (Math.abs(samples[i - 1] - samples[i]) >= sensitivity)
+            if (Math.abs(samples[i - 1] - samples[i]) >= this.sensitivity)
                 return true;
         }
         return false;
+    };
+    IRAnalyzer.prototype.adjustSensitivity = function (samples) {
+        var max = 0;
+        for (var i = 1; i < samples.length; i++)
+            max = Math.max(max, Math.abs(samples[i - 1] - samples[i]));
+        if (this.sensitivity < max * 10) {
+            this.sensitivity = max * 10;
+            console.log('sensitivity: ' + this.sensitivity);
+        }
     };
     IRAnalyzer.prototype.normalizeBuffer = function () {
         var min = this.buffer[0];
