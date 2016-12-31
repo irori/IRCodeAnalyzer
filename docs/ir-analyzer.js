@@ -25,8 +25,8 @@ var IRAnalyzer = (function () {
         }
         if (this.buflen == 0)
             return;
-        var threshold = 0.5;
         var samples = this.normalizeBuffer();
+        var threshold = (0.5 + this.zeroValue) / 2;
         this.buflen = 0;
         if (samples.length == 0)
             return;
@@ -98,7 +98,7 @@ var Format;
 var IRCodeParser = (function () {
     function IRCodeParser(timings) {
         this.determineUnitLength(timings);
-        var i = this.parseLeader(timings);
+        var i = this.format == Format.SONY ? 1 : 2;
         this.bits = this.parseData(timings, i);
     }
     IRCodeParser.prototype.dump = function () {
@@ -126,39 +126,28 @@ var IRCodeParser = (function () {
         return lines.join('\n');
     };
     IRCodeParser.prototype.determineUnitLength = function (data) {
-        var h = {};
-        for (var i = 0; i < data.length; i++) {
-            h[data[i]] = (h[data[i]] || 0) + 1;
-        }
-        var max = 0, maxIndex;
-        for (var j in h) {
-            if (h[j] > max) {
-                max = h[j];
-                maxIndex = j;
+        var leaderRatio = data[0] / data[1];
+        if (leaderRatio > 1.9 && leaderRatio < 2.1) {
+            var leaderSize = (data[0] + data[1]) / data[2];
+            if (leaderSize > 22 && leaderSize < 26) {
+                this.format = Format.NEC;
+                this.unitLength = (data[0] + data[1]) / 24;
+            }
+            else if (leaderSize > 10 && leaderSize < 14) {
+                this.format = Format.AEHA;
+                this.unitLength = (data[0] + data[1]) / 12;
             }
         }
-        this.unitLength = parseInt(maxIndex);
+        else if (leaderRatio > 3.8 && leaderRatio < 4.2) {
+            this.format = Format.SONY;
+            this.unitLength = data[0] / 4;
+        }
+        if (!this.unitLength)
+            throw 'cannot find frame leader';
         console.log('T = ' + this.unitLength);
     };
     IRCodeParser.prototype.toUnits = function (t) {
         return Math.round(t / this.unitLength);
-    };
-    IRCodeParser.prototype.parseLeader = function (data) {
-        for (var i = 1; i < data.length; i++) {
-            if (this.toUnits(data[i - 1]) == 16 && this.toUnits(data[i]) == 8) {
-                this.format = Format.NEC;
-                return i + 1;
-            }
-            if (this.toUnits(data[i - 1]) == 8 && this.toUnits(data[i]) == 4) {
-                this.format = Format.AEHA;
-                return i + 1;
-            }
-            if (this.toUnits(data[i - 1]) == 4 && this.toUnits(data[i]) == 1) {
-                this.format = Format.SONY;
-                return i;
-            }
-        }
-        throw 'cannot find frame leader';
     };
     IRCodeParser.prototype.parseData = function (data, start) {
         var bits = [];
@@ -180,7 +169,7 @@ var IRCodeParser = (function () {
             if (bits[i])
                 r |= (1 << i);
         }
-        var w = bits.length / 4;
+        var w = Math.ceil(bits.length / 4);
         return (Array(w).join('0') + r.toString(16)).slice(-w);
     };
     return IRCodeParser;

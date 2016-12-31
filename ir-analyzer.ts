@@ -32,8 +32,8 @@ class IRAnalyzer {
         if (this.buflen == 0)
             return;
 
-        const threshold = 0.5;
         var samples = this.normalizeBuffer();
+        const threshold = (0.5 + this.zeroValue) / 2;
         this.buflen = 0;
         if (samples.length == 0)
             return;
@@ -108,7 +108,7 @@ class IRCodeParser {
 
     constructor(timings: number[]) {
         this.determineUnitLength(timings);
-        var i = this.parseLeader(timings);
+        var i = this.format == Format.SONY ? 1 : 2;
         this.bits = this.parseData(timings, i);
     }
 
@@ -140,42 +140,27 @@ class IRCodeParser {
     }
 
     private determineUnitLength(data: number[]) {
-        // Find the most frequent value
-        var h = {};
-        for (var i = 0; i < data.length; i++) {
-            h[data[i]] = (h[data[i]] || 0) + 1;
-        }
-        var max = 0, maxIndex;
-        for (var j in h) {
-            if (h[j] > max) {
-                max = h[j];
-                maxIndex = j;
+        var leaderRatio = data[0] / data[1];
+        if (leaderRatio > 1.9 && leaderRatio < 2.1) {
+            var leaderSize = (data[0] + data[1]) / data[2];
+            if (leaderSize > 22 && leaderSize < 26) {
+                this.format = Format.NEC;
+                this.unitLength = (data[0] + data[1]) / 24;
+            } else if (leaderSize > 10 && leaderSize < 14) {
+                this.format = Format.AEHA;
+                this.unitLength = (data[0] + data[1]) / 12;
             }
+        } else if (leaderRatio > 3.8 && leaderRatio < 4.2) {
+            this.format = Format.SONY;
+            this.unitLength =  data[0] / 4;
         }
-        this.unitLength = parseInt(maxIndex);
+        if (!this.unitLength)
+            throw 'cannot find frame leader';
         console.log('T = ' + this.unitLength);
     }
 
     private toUnits(t: number) {
         return Math.round(t / this.unitLength);
-    }
-
-    private parseLeader(data: number[]): number {
-        for (var i = 1; i < data.length; i++) {
-            if (this.toUnits(data[i-1]) == 16 && this.toUnits(data[i]) == 8) {
-                this.format = Format.NEC;
-                return i + 1;
-            }
-            if (this.toUnits(data[i-1]) == 8 && this.toUnits(data[i]) == 4) {
-                this.format = Format.AEHA;
-                return i + 1;
-            }
-            if (this.toUnits(data[i-1]) == 4 && this.toUnits(data[i]) == 1) {
-                this.format = Format.SONY;
-                return i;
-            }
-        }
-        throw 'cannot find frame leader';
     }
 
     private parseData(data: number[], start: number) {
@@ -199,7 +184,7 @@ class IRCodeParser {
             if (bits[i])
                 r |= (1 << i);
         }
-        var w = bits.length / 4;
+        var w = Math.ceil(bits.length / 4);
         return (Array(w).join('0') + r.toString(16)).slice(-w);
     }
 }
