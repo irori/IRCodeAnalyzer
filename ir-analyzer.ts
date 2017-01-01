@@ -137,7 +137,7 @@ class IRCodeParser {
         lines.push('data:');
         while (bits && bits.length > 0) {
             var byte = bits.slice(0, 8);
-            lines.push('  ' + byte.join('') + ' ' + this.toHex(byte));
+            lines.push('  ' + rightpad(byte.join(''), 9, ' ') + this.toHex(byte));
             bits = bits.slice(8);
         }
         return lines.join('\n');
@@ -189,8 +189,7 @@ class IRCodeParser {
             if (bits[i])
                 r |= (1 << i);
         }
-        var w = Math.ceil(bits.length / 4);
-        return (Array(w).join('0') + r.toString(16)).slice(-w);
+        return leftpad(r.toString(16), Math.ceil(bits.length / 4), '0');
     }
 }
 
@@ -274,6 +273,14 @@ class App {
         this.analyzer.addSamples(event.inputBuffer.getChannelData(0),
                                  event.inputBuffer.getChannelData(1));
     }
+}
+
+function leftpad(str: string, len: number, ch: string): string {
+    return (Array(len).join(ch) + str).slice(-len);
+}
+
+function rightpad(str: string, len: number, ch: string): string {
+    return (str + Array(len).join(ch)).slice(0, len);
 }
 
 var app = new App();

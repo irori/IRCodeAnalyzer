@@ -124,7 +124,7 @@ var IRCodeParser = (function () {
         lines.push('data:');
         while (bits && bits.length > 0) {
             var byte = bits.slice(0, 8);
-            lines.push('  ' + byte.join('') + ' ' + this.toHex(byte));
+            lines.push('  ' + rightpad(byte.join(''), 9, ' ') + this.toHex(byte));
             bits = bits.slice(8);
         }
         return lines.join('\n');
@@ -174,8 +174,7 @@ var IRCodeParser = (function () {
             if (bits[i])
                 r |= (1 << i);
         }
-        var w = Math.ceil(bits.length / 4);
-        return (Array(w).join('0') + r.toString(16)).slice(-w);
+        return leftpad(r.toString(16), Math.ceil(bits.length / 4), '0');
     };
     return IRCodeParser;
 }());
@@ -247,4 +246,10 @@ var App = (function () {
     };
     return App;
 }());
+function leftpad(str, len, ch) {
+    return (Array(len).join(ch) + str).slice(-len);
+}
+function rightpad(str, len, ch) {
+    return (str + Array(len).join(ch)).slice(0, len);
+}
 var app = new App();
