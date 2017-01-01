@@ -128,8 +128,12 @@ class IRCodeParser {
             // TODO: parity check
             bits = this.bits.slice(16);
             break;
+        case Format.SONY:
+            bits = this.bits;
+            break;
         }
-        lines.push('customer ID: ' + customer);
+        if (customer)
+            lines.push('customer ID: ' + customer);
         lines.push('data:');
         while (bits && bits.length > 0) {
             var byte = bits.slice(0, 8);
@@ -150,7 +154,7 @@ class IRCodeParser {
                 this.format = Format.AEHA;
                 this.unitLength = (data[0] + data[1]) / 12;
             }
-        } else if (leaderRatio > 3.8 && leaderRatio < 4.2) {
+        } else if (leaderRatio > 3.6 && leaderRatio < 4.4) {
             this.format = Format.SONY;
             this.unitLength =  data[0] / 4;
         }
@@ -164,13 +168,14 @@ class IRCodeParser {
     }
 
     private parseData(data: number[], start: number) {
+        const bitOnLength = this.format == Format.SONY ? 2 : 3;
         var bits: number[] = [];
         for (var i = start; i < data.length - 1; i += 2) {
             if (this.toUnits(data[i]) != 1)
-                bits.push(-1);
+                break;
             else if (this.toUnits(data[i+1]) == 1)
                 bits.push(0);
-            else if (this.toUnits(data[i+1]) == 3)
+            else if (this.toUnits(data[i+1]) == bitOnLength)
                 bits.push(1);
             else
                 break;
