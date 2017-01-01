@@ -133,7 +133,7 @@ var IRCodeParser = (function () {
         var leaderRatio = data[0] / data[1];
         if (leaderRatio > 1.9 && leaderRatio < 2.1) {
             var leaderSize = (data[0] + data[1]) / data[2];
-            if (leaderSize > 22 && leaderSize < 26) {
+            if (leaderSize > 20 && leaderSize < 28) {
                 this.format = Format.NEC;
                 this.unitLength = (data[0] + data[1]) / 24;
             }
