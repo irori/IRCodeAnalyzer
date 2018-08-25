@@ -37,6 +37,13 @@ button:hover {
     font-size: 20px;
 }
 
+#error {
+    position: absolute;
+    top: 0px;
+    color: red;
+    padding: 5px;
+}
+
 #irkit-json {
     background-color: #eee;
     padding: 12px 16px;

@@ -218,6 +218,11 @@ var App = (function () {
     function App() {
         var _this = this;
         var startButton = document.getElementById('start');
+        if (!window.AudioContext) {
+            document.getElementById('error').textContent = 'This browser does not support audio recording.';
+            startButton.style.display = 'none';
+            return;
+        }
         startButton.addEventListener('click', function () {
             startButton.style.display = 'none';
             _this.start();
@@ -235,7 +240,11 @@ var App = (function () {
             var input = _this.audioContext.createMediaStreamSource(stream);
             input.connect(_this.node);
             _this.node.connect(_this.audioContext.destination);
-        }, function (err) { throw err; });
+        }, function (err) {
+            var msg = 'Failed to start recording: ' + err.message;
+            document.getElementById('error').textContent = msg;
+            throw err;
+        });
     };
     App.prototype.update = function (samples, zeroValue, timings) {
         this.view.updateJson(timings, this.audioContext.sampleRate);

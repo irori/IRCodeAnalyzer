@@ -239,6 +239,11 @@ class App {
 
     constructor() {
         let startButton = document.getElementById('start');
+        if (!(window as any).AudioContext) {
+            document.getElementById('error').textContent = 'This browser does not support audio recording.';
+            startButton.style.display = 'none';
+            return;
+        }
         startButton.addEventListener('click', () => {
             startButton.style.display = 'none';
             this.start();
@@ -252,7 +257,7 @@ class App {
         this.node = this.audioContext.createScriptProcessor(16384, 2, 1);
         this.node.onaudioprocess = this.onaudioprocess.bind(this);
 
-        // Turn of audio processing and enable stereo input in Chrome
+        // Turn off audio processing and enable stereo input in Chrome
         // (https://crbug.com/453876#c11).
         // Unfortunately Firefox does not support stereo input
         // (https://bugzilla.mozilla.org/show_bug.cgi?id=971528).
@@ -262,7 +267,11 @@ class App {
             var input = this.audioContext.createMediaStreamSource(stream);
             input.connect(this.node);
             this.node.connect(this.audioContext.destination);
-        }, (err) => { throw err; });
+        }, (err) => {
+            let msg = 'Failed to start recording: ' + err.message;
+            document.getElementById('error').textContent = msg;
+            throw err;
+        });
     }
 
     update(samples: Float32Array, zeroValue: number, timings: number[]) {
