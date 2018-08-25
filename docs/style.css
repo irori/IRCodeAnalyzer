@@ -3,9 +3,38 @@ body {
     max-width: 1024px;
 }
 
+button {
+    display: inline-block;
+    padding: 0.5em 1em;
+    text-decoration: none;
+    background-color: black;
+    color: lime;
+    border: double 4px lime;
+    border-radius: 3px;
+    transition: .4s;
+}
+
+button:hover {
+    background: limegreen;
+    color: white;
+}
+
+.display {
+    position: relative;
+}
+
 #visualizer {
     border: solid 1px;
     background-color: #000;
+}
+
+#start {
+    position: absolute;
+    left: 412px;
+    top: 75px;
+    width: 200px;
+    height: 50px;
+    font-size: 20px;
 }
 
 #irkit-json {

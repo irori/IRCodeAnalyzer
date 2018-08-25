@@ -238,6 +238,14 @@ class App {
     private analyzer: IRAnalyzer;
 
     constructor() {
+        let startButton = document.getElementById('start');
+        startButton.addEventListener('click', () => {
+            startButton.style.display = 'none';
+            this.start();
+        })
+    }
+
+    start() {
         this.view = new View();
         this.audioContext = new AudioContext();
         this.analyzer = new IRAnalyzer(this);

@@ -217,6 +217,14 @@ var View = (function () {
 var App = (function () {
     function App() {
         var _this = this;
+        var startButton = document.getElementById('start');
+        startButton.addEventListener('click', function () {
+            startButton.style.display = 'none';
+            _this.start();
+        });
+    }
+    App.prototype.start = function () {
+        var _this = this;
         this.view = new View();
         this.audioContext = new AudioContext();
         this.analyzer = new IRAnalyzer(this);
@@ -228,7 +236,7 @@ var App = (function () {
             input.connect(_this.node);
             _this.node.connect(_this.audioContext.destination);
         }, function (err) { throw err; });
-    }
+    };
     App.prototype.update = function (samples, zeroValue, timings) {
         this.view.updateJson(timings, this.audioContext.sampleRate);
         this.view.updateDuration(samples.length / this.audioContext.sampleRate * 1000);
